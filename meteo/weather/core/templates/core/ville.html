@@ -1,0 +1,23 @@
+{% if meteo_data %}
+
+<h1>{{ meteo_data.city }}</h1>
+<h1>{{ meteo_data.temperature }}</h1>
+<p>{{ meteo_data.description }}</p>
+<img src="http://api.openweathermap.org/img/w/{{ meteo_data.icon }}" alt="{{ meteo_data.description }}">
+
+{% endif %}
+
+
+{% if forecasts %}
+    <h2>3 prochains jours </h2>
+    <div class="forecast-container">
+        {% for forecast in forecasts %}
+            <div class="forecast">
+                <h3>{{ forecast.day }}</h3>
+                <p>{{ forecast.min_temp }}°C - {{ forecast.max_temp }}°C</p>
+                <p>{{ forecast.description }}</p>
+                <img src="http://openweathermap.org/img/w/{{ forecast.icon }}.png" alt="{{ forecast.description }}">
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

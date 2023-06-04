@@ -35,27 +35,57 @@
     background:  rgb(65, 64, 64);
     color: white;
 }
+
+    
+.forecast-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.forecast {
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin: 10px;
+  width: calc(100% / 5 - 20px);
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .forecast {
+    width: calc(50% - 20px);
+  }
+}
+
+@media (max-width: 480px) {
+  .forecast {
+    width: 100%;
+  }
+}
+
 </style>
 
     
-   <!-- votre_template.html -->
 <div id="main">
     <h1>Prévision météorologique</h1>
-    <form method="GET" action="{% url 'home' %}">
+    <form method="post" action="{% url 'home' %}">
+        {% csrf_token %}
         <label for="city"></label>
         <input type="text" name="city" id="city" value="{{request.GET.city}}" placeholder="city" class="text">
         <input type="submit" value="Recherche" class="button">
     </form>
 
-    {% if res_json %}
-    <h3>ville: {{ res_json.city_name }}</h3>
-    <p> Code pays: {{ res_json.Code_country }}</p>
-    <p>Coordonnées: {{ res_json.coordonate }}</p>
-    <p>Température: {{ res_json.temp }}</p>
-    <p>Description: {{ res_json.description }}</p>
-    <div><img src="http://openweathermap.org/img/w/{{ icon }}.png" width="100px" height="100px" alt="Weather Icon"></div>
-  
-    {% endif %}
+ <div class="comparaison">
+    {% if meteo_data %}
+    <div class="ville">
+        {% include 'core/ville.html' with meteo_data=meteo_data forecasts=forecasts %}
+    </div>
+{% endif %}
+
+ </div>
+
 </div>
 
 </body>

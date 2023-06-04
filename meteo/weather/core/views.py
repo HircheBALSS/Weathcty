@@ -1,30 +1,52 @@
 from django.shortcuts import render
-import urllib.request
-import json
+import requests
+import datetime
+
 
 def home(request):
-    if 'city' in request.GET:
-        city = request.GET.get('city')
-        source = urllib.request.urlopen('https://api.openweathermap.org/data/2.5/weather?q=' + 
-                                        city + '&units=metric&appid=da9408e8d19903267820876efa42cdde').read()
-        json_data = json.loads(source)
-        
+    API_KEY = 'f13c2d9b4e28d8257a753f26243b4a84'
+    meteo_url = f"https://api.openweathermap.org/data/2.5/weather?q={{}}&appid={API_KEY}"
+    forecast_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={{}}&lon={{}}&exclude=current,minutely,hourly,alerts&appid={API_KEY}"
 
-        res_json = {
-            "city_name": str(json_data['name']),
-            "Code_country": str(json_data['sys']['country']),
-            "coordonate": str(json_data['coord']['lat']) + ', ' + str(json_data['coord']['lon']),
-            "temp": str(json_data['main'] ['temp']) + ' °C',
-            "pressure": str(json_data['main'] ['pressure']),
-            "humidity": str(json_data['main'] ['humidity']),
-            "description": str(json_data['weather'][0]['description']),
-            "main": str(json_data ['weather'][0]['main']),
-            "icon": str(json_data ['weather'][0]['icon']),
+    if request.method == "POST":
+        city = request.POST['city']
+
+        meteo_data, forecasts = fetch_meteo_and_forecast(city, meteo_url, forecast_url)
+
+        # print("Meteo Data:")
+        # print(meteo_data)
+        # print("Forecasts:")
+        # print(forecasts)
+
+        context = {
+            "meteo_data": meteo_data,
+            "forecasts": forecasts,
         }
 
-        print(res_json)
-
+        return render(request, 'core/accueil.html', context)
     else:
-        res_json = {}
+        return render(request, 'core/accueil.html')
 
-    return render(request, 'core/accueil.html', {'res_json': res_json})
+def fetch_meteo_and_forecast(city, meteo_url, forecast_url):
+    meteo_response = requests.get(meteo_url.format(city)).json()
+    lat, lon = meteo_response['coord']['lat'], meteo_response['coord']['lon']
+    forecast_response = requests.get(forecast_url.format(lat, lon)).json()
+
+    meteo_data = {
+        "city": city,
+        "temperature": round(meteo_response['main']['temp'] - 273.15, 2),
+        "description": meteo_response['weather'][0]['description'],
+        "icon": meteo_response['weather'][0]['icon'],
+    }
+
+    forecasts = []
+    for data_forecast in forecast_response.get('daily', [])[:3]:
+     forecasts.append({
+            "day": datetime.datetime.fromtimestamp(data_forecast['dt']).strftime("%A"),
+            "min_temp": round(data_forecast['temp']['min'] - 273.15, 2),
+            "max_temp": round(data_forecast['temp']['max'] - 273.15, 2),
+            "description": data_forecast['weather'][0]['description'],
+            "icon": data_forecast['weather'][0]['icon'],
+        })
+
+    return meteo_data, forecasts
